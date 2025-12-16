@@ -1,16 +1,16 @@
-import os
-from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
+from seleniumbase import BaseCase
+from seleniumbase import SB
 
-# Parametrage de Selenium
-firefoxPath = r'C:\Program Files\Mozilla Firefox\firefox.exe'
-option = webdriver.FirefoxOptions()
-option.binary_location = firefoxPath
 
-service = Service(GeckoDriverManager().install())
-geckodriverPath = r'C:\Python27\Scripts\geckodriver.exe'
+with SB() as sb:
 
-driver = webdriver.Firefox(service=service, options = option)
-url = "https://www.leboncoin.fr/"
-driver.get(url)
+    url = "https://www.leboncoin.fr/"
+    urlRecherche = "https://www.leboncoin.fr/recherche?text=cible+avec+flechette"
+
+    sb.activate_cdp_mode(urlRecherche)
+    sb.sleep(2)
+    sb.solve_captcha()
+
+    # Ce sleep sert à la réalisation des Captchas par l'utilisateur
+    sb.sleep(20)
+
