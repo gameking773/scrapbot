@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from seleniumbase import SB
+import json
 
 with SB() as sb:
 
@@ -45,4 +46,7 @@ with SB() as sb:
     # Slicing des 10 premiers url
     resultat = resultat[:10]
 
-    print(resultat)
+
+# Transformation en json
+    with open("annonces.json", "w", encoding="utf-8") as f:
+        json.dump(resultat, f, indent=4, ensure_ascii=False)
