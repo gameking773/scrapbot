@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from seleniumbase import SB
 
 with SB() as sb:
@@ -5,6 +6,7 @@ with SB() as sb:
     url = "https://www.leboncoin.fr"
     urlRecherche = "https://www.leboncoin.fr/recherche?text=cible+avec+flechette"
 
+    # Initialisation
     sb.activate_cdp_mode(urlRecherche)
     sb.sleep(2)
     sb.solve_captcha()
@@ -12,29 +14,40 @@ with SB() as sb:
     # Ce sleep sert à la réalisation des Captchas par l'utilisateur
     sb.sleep(10)
 
-    annonces = sb.find_elements("article")
+    html = sb.get_page_source()
+    soup = BeautifulSoup(html, 'html.parser')
+
+    annonces = soup.find_all("article")
     resultat = []
 
     for annonce in annonces:
         resAnnonce = {}
-        # Extraction du Titre
-        spanTitre = annonce.querySelector("span[title*='Voir l’annonce']")
-        titre = spanTitre.get_attribute("title").replace("Voir l’annonce: ", "")
-        resAnnonce["Titre"]= titre
 
-        # Extraction du prix
-        pPrix = annonce.querySelector('p[data-test-id="price"] span')
-        resAnnonce["Prix"] = pPrix.text.replace('\xa0', ' ')
+        # 1. Extraction du Titre
+        span_titre = annonce.select_one("span[title*='Voir l’annonce']")
+        resAnnonce["Titre"] = span_titre["title"].replace("Voir l’annonce: ", "")
 
-        # Extraction de l'URL
-        ancreUrl = annonce.querySelector("a")
-        lien = ancreUrl.get_attribute("href")
-        resAnnonce["Lien"]= url+lien
+        # 2. Extraction du Prix
+        p_prix = annonce.select_one('p[data-test-id="price"]')
+        resAnnonce["Prix"] = p_prix.get_text(strip=True).replace('\xa0', ' ')
+
+        # 3. Extraction de la localisation
+        infos = annonce.find_all("p")
+        loc = "Non trouvée"
+        for p in infos:
+            texte = p.get_text()
+            if "Située à" in texte:
+                loc = texte.replace("Située à ", "").strip()
+                break
+        resAnnonce["Localisation"] = loc
+
+        # 4. Extraction de l'URL
+        lien = annonce.find("a")
+        resAnnonce["Lien"] = url + lien["href"]
 
         resultat.append(resAnnonce)
 
-        # Slicing des 10 premiers url
+    # Slicing des 10 premiers url
     resultat = resultat[:10]
-
 
     print(resultat)
